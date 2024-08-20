@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "binder-design"
+version = "0.1.0"
+description = ""
+authors = ["Alex Naka <alexn@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+modal = "^0.63.90"
+ipykernel = "^6.29.5"
+numpy = "^2.0.1"
+seaborn = "^0.13.2"
+pandas = "^2.2.2"
+biopython = "^1.84"
+python-dotenv = "^1.0.1"
+scipy = "^1.14.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

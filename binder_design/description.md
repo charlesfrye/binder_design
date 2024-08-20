@@ -1,0 +1,13 @@
+I waited until the last second to start, so this submission is more or less an attempt to speed-run this process. 
+
+I haven't worked on binder design previously and was short on time, so my initial plan was to just try to diversify/optimize existing binders/ligands rather than de novo design. I worked out that one of the top submissions on the leaderboard was likely a fragment of EGF, so I decided to emulate that approach.
+
+My approach was to try to directly optimize against the stated criterion for virtual scoring (PAE_interaction from alphafold). I think there's a good chance that I might be playing with Goodhart's law in doing this - if any of my proposals make it to the wetlab phase, it wouldn't surprise me if they score pretty poorly in an empirical assay. 
+
+To start, I randomly masked positions in the initial binder and used PepMLM (https://github.com/programmablebio/pepmlm) to infill the masked positions. I filtered sequences based on pseudoperplexity, and then used ColabFold to calculate the PAE_interaction score for new binders, using the structure of EGFR from the 6ARU entry on PDB. Then I filtered the sequences based on the PAE_interaction score, and used these sequences as seeds for sampling via PepMLM. I used Modal to parallelize runs of ColabFold across 20-80 A100 GPUs, which allowed me to generate a decent number of structure predictions in a short amount of time. However, after several iterations of this process, it became clear that pseudoperplexity (in my hands, at least) was not predictive of the PAE interaction score in this context. This was a setback, and in retrospect, I think it would have been smarter to go with LigandMPNN over PepMLM.
+
+To adjust, I used the predictions resulting from my first experiment to create a small dataset of binder sequences with PAE_interaction labels. I then onehot encoded the sequences and trained an ensemble of small convnets to predict the PAE_interaction score - a quick and dirty distillation of colabfold's outputs in this narrow context. I then used evoprotgrad (https://github.com/NREL/EvoProtGrad/tree/main) to sample new sequences guided by this ensemble. I replaced PepMLM with evoprotgrad in the sampling process, and resumed iteratively sampling/refining. I also retrained the ensemble after each new round of folding. Overall a pretty computationally inefficient approach, but fun - distillation via batched active learning.
+
+Finally, I filtered for top scoring binders and then used greedy optimization to maximize hamming distance between them, in order to diversify my submission a bit.
+
+I had a lot of fun participating in this competition - I hope you do more things like this in the future.
